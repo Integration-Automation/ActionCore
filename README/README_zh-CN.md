@@ -113,6 +113,10 @@ package_manager.set_allow_arbitrary_packages(False)   # 其他包在导入前就
 FileAutomation（`FA_`）而做的。`architecture.md` §6 列出其中哪些已经改用它，以及各自用了哪些部件与配置。
 四个项目的 TCP 服务器都运行在 `socket_server` 上：LoadDensity 用 JSON 信封令牌、分帧与 TLS，FileAutomation 用 `AUTH` 标头与它的访问控制列表。
 
+[WebRunner](https://github.com/Integration-Automation/WebRunner)（`WR_`）的 action 执行器也运行在它上面。它自己的 action 格式
+（`[name, [args], {kwargs}]`）是一个解析器，重试与 action span 包在 `attempt` 外面。失败截图放进 `failure_record`，
+重复的 action 会编号（`DuplicateKeys.NUMBER`）。
+
 ## 开发
 
 ```bash

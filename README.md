@@ -121,6 +121,10 @@ the projects this package is for. `architecture.md` §6 lists which of them have
 settings each one uses. All four run their TCP servers on `socket_server`: LoadDensity with the JSON-envelope
 token, framing and TLS, FileAutomation with the `AUTH` header and its ACL.
 
+[WebRunner](https://github.com/Integration-Automation/WebRunner) (`WR_`) runs its action executor on it as well. Its
+own action format (`[name, [args], {kwargs}]`) is a parser, and its retries and action span wrap `attempt`.
+Failure screenshots go into `failure_record`, and repeated actions are numbered (`DuplicateKeys.NUMBER`).
+
 n and an ACL.
 
 ## Development
