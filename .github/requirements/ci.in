@@ -1,0 +1,4 @@
+# What the CI test job installs; ci.txt is generated from this file (the command is in ci.yml).
+# je_action_core has no runtime dependencies, so this is only the test tools.
+pytest
+pytest-timeout

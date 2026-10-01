@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "je_action_core"
+version = "0.0.0"
+authors = [
+    { name = "JE-Chen", email = "jechenmailman@gmail.com" },
+]
+description = "The keyword-driven action executor shared by APITestka, LoadDensity, MailThunder and FileAutomation"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Development Status :: 3 - Alpha",
+    "Environment :: Other Environment",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Code = "https://github.com/Integration-Automation/ActionCore"
+
+[tool.setuptools.packages.find]
+include = ["je_action_core*"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]

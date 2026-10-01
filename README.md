@@ -1,0 +1,125 @@
+# ActionCore
+
+**English** | [繁體中文](README/README_zh-TW.md) | [简体中文](README/README_zh-CN.md)
+
+`je_action_core` is the keyword-driven action executor shared by
+[APITestka](https://github.com/Integration-Automation/APITestka), [LoadDensity](https://github.com/Integration-Automation/LoadDensity),
+[MailThunder](https://github.com/Integration-Automation/MailThunder) and [FileAutomation](https://github.com/Integration-Automation/FileAutomation).
+Each of them carried its own copy of the same executor, package manager, callback executor, action-file reader
+and socket server. This package replaces those copies: a project configures it with its own command prefix,
+document key, exceptions and messages.
+
+It has no dependencies and supports Python 3.10 to 3.14.
+
+## Contents
+
+- [Installation](#installation)
+- [Actions](#actions)
+- [Quick start](#quick-start)
+- [The pieces](#the-pieces)
+- [Package gate](#package-gate)
+- [Socket server protocol](#socket-server-protocol)
+- [Who uses it](#who-uses-it)
+- [Development](#development)
+- [License](#license)
+
+## Installation
+
+```bash
+pip install je_action_core
+```
+
+A framework that is built on it installs it as a dependency.
+
+## Actions
+
+An action list is a JSON list of actions, or a document that keeps the list under one key
+(`{"api_testka": [...]}`). Each action takes one of three forms:
+
+| Action | Call |
+|---|---|
+| `["name"]` | `command()` |
+| `["name", {"a": 1}]` | `command(a=1)` |
+| `["name", [1, 2]]` | `command(1, 2)` |
+
+Running a list returns one record per action: the command's return value, or `repr(error)` when it raised. One
+failing action does not stop the rest.
+
+## Quick start
+
+```python
+from je_action_core import (
+    ActionExecutor, ActionListRules, CommandPolicy, CommandRegistry, ExecutorSettings, LoggingReporter,
+)
+import logging
+
+registry = CommandRegistry({"MY_add": lambda a, b: a + b}, policy=CommandPolicy.FUNCTIONS_ONLY)
+executor = ActionExecutor(
+    ExecutorSettings(rules=ActionListRules("my_tool"), reporter=LoggingReporter(logging.getLogger("my_tool"))),
+    registry,
+)
+
+executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b": 4}]]})
+# {"execute: ['MY_add', [1, 2]]": 3, "execute: ['MY_add', {'a': 3, 'b': 4}]": 7}
+```
+
+## The pieces
+
+| Module | What it gives you | Settings |
+|---|---|---|
+| `registry` | `CommandRegistry`: commands by name, `event_dict` as the live mapping | `CommandPolicy.FUNCTIONS_ONLY` or `ANY_CALLABLE` for caller-added commands; the exception for a refused one |
+| `action_list` | `ActionListRules` (where the list is), `LegacyActionParser` and `StrictActionParser` | document key and legacy keys (with a `DeprecationWarning`); empty list raises or returns `{}`; error messages |
+| `executor` | `ActionExecutor`: `execute_action`, `execute_files`, `add_command_to_executor` | `ExecutorSettings`: rules, parser, reporter, file reader, record key (`execute: …` or `execute[i]: …`), action rewrite |
+| `reporting` | `LoggingReporter`, `PrintReporter`, or your own `ExecutionReporter` | where events, failures and records go |
+| `package_manager` | `PackageManager`: load an installed package's members as commands, behind the [package gate](#package-gate) | member naming (`<package>_<member>` or bare), predicates, name check, errors to log |
+| `callback` | `CallbackFunctionExecutor`: run a trigger, then a callback | legacy or strict checking; raise or log and return `None` |
+| `json_io` | `ActionJsonFile`, `read_action_json`, `write_action_json`: UTF-8, locked, non-ASCII kept | exception class and message templates |
+| `file_listing` | `get_dir_files_as_list`: action files under a directory | — |
+| `socket_server` | `start_action_socket_server`: the plain TCP action server | executor, payload check, errors answered, oversize policy |
+| `builtins_policy` | `SAFE_BUILTINS`: the builtins an action list may call | — |
+
+`__all__` in `je_action_core/__init__.py` is the supported import surface.
+
+## Package gate
+
+`PackageManager.add_package_to_executor` imports a package and registers its members as commands. An action list
+that can name `os` or `subprocess` could therefore run anything. The host program decides what may load:
+
+```python
+package_manager.allow_packages("my_helpers")          # these, and their submodules
+package_manager.set_allow_arbitrary_packages(False)   # refuse everything else before importing it
+```
+
+Neither switch should ever be exposed as an action command, so an action list cannot open its own gate. A
+refused package raises the project's `refused` exception, which the executor records as that action's result.
+Until the host calls either switch, any package still loads but raises a `DeprecationWarning`. A project can
+turn the gate off (`PackageGate.OFF`) while it moves to it.
+
+## Socket server protocol
+
+`start_action_socket_server(host, port, settings)` serves on a daemon thread. A client sends one JSON action
+document per connection. The server replies with each record value on its own line, then
+`Return_Data_Over_JE`. A failure replies with the error text and the same marker. `quit_server` stops the server
+and sets `close_flag`. The server has no authentication, so bind it only to a trust## Who uses it
+
+APITestka (`AT_`, port 9939), LoadDensity (`LD_`), MailThunder (`MT_`, port 9942) and FileAutomation (`FA_`) are
+the projects this package is for. `architecture.md` §6 lists which of them have moved to it and which pieces and
+settings each one uses. LoadDensity and FileAutomation keep their own socket servers: a gevent server with
+framing, a token and TLS, and a server with authentication and an ACL.
+
+n and an ACL.
+
+## Development
+
+```bash
+pip install -e .
+pip install pytest
+python -m pytest test/
+```
+
+`architecture.md` describes the layers and the contracts with the four projects. Outstanding work is in
+`progress.md`, and finished work is recorded in `docs/updates/`.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
