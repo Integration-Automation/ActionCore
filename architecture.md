@@ -69,9 +69,15 @@ Nothing in the package imports a project; the projects import it.
 
 ## 6. Cross-project boundaries
 
-**Used by.** None of the four projects has moved yet. Each move adds a row here with the pieces and settings
-that project uses, and the same commit updates the project's own `architecture.md` §6. Until the package is on
-PyPI, a project's CI installs it from this repository, pinned to a commit.
+**Used by.** Each project that moves adds a row here; the same round updates that project's own
+`architecture.md` §6. Until the package is on PyPI, a project's CI and `[tool.uv.sources]` install it from this
+repository at a fixed commit.
+
+| Project | Pieces | Settings |
+|---|---|---|
+| APITestka (`AT_`, `api_testka`) | executor, registry, package manager, callback executor, JSON files, file listing, socket server (9939) | `LegacyActionParser`, plain record keys, `LoggingReporter`, `strip_runner_metadata` as `prepare`; functions-only registry; gate on, prefixed members, every load error logged; callback returns `None` on failure; socket reads the prefix and answers every error |
+
+LoadDensity, MailThunder and FileAutomation have not moved yet.
 
 **What the projects rely on here.** They rely on these, and none may change without changing the projects in
 the same round:
