@@ -58,6 +58,7 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261001-06 | 2026-10-01 | Socket server: template handler, framing, TLS, two auth dialects | #change #socket-server | [2026-10](2026-10.md) |
 | U-20261001-05 | 2026-10-01 | First PyPI release: 0.0.1 | #done #release | [2026-10](2026-10.md) |
 | U-20261001-04 | 2026-10-01 | The package ships py.typed | #change #typing | [2026-10](2026-10.md) |
 | U-20261001-03 | 2026-10-01 | add_package_to_executor returns None again | #bugfix #package-manager | [2026-10](2026-10.md) |
@@ -68,4 +69,4 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | File | Period | Entries |
 |---|---|---:|
-| [2026-10.md](2026-10.md) | 2026-10 | 5 |
+| [2026-10.md](2026-10.md) | 2026-10 | 6 |

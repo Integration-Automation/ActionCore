@@ -75,7 +75,7 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 | `callback` | `CallbackFunctionExecutor`: run a trigger, then a callback | legacy or strict checking; raise or log and return `None` |
 | `json_io` | `ActionJsonFile`, `read_action_json`, `write_action_json`: UTF-8, locked, non-ASCII kept | exception class and message templates |
 | `file_listing` | `get_dir_files_as_list`: action files under a directory | — |
-| `socket_server` | `start_action_socket_server`: the plain TCP action server | executor, payload check, errors answered, oversize policy |
+| `socket_server`, `socket_auth` | `start_action_socket_server` and the request handlers (plain, secret header, JSON-envelope token) | executor, payload check, errors answered, framing, TLS, reply templates, secret |
 | `builtins_policy` | `SAFE_BUILTINS`: the builtins an action list may call | — |
 
 `__all__` in `je_action_core/__init__.py` is the supported import surface.
@@ -97,10 +97,24 @@ turn the gate off (`PackageGate.OFF`) while it moves to it.
 
 ## Socket server protocol
 
-`start_action_socket_server(host, port, settings)` serves on a daemon thread. A client sends one JSON action
-document per connection. The server replies with each record value on its own line, then
+`start_action_socket_server(host, port, settings, handler_class=ActionRequestHandler)` serves on a daemon thread.
+A client sends one JSON action document per connection. The server replies with one line per record, then
 `Return_Data_Over_JE`. A failure replies with the error text and the same marker. `quit_server` stops the server
-and sets `close_flag`. The server has no authentication, so bind it only to a trust## Who uses it
+and sets `close_flag` and `close_event`. What can be configured:
+
+- **Framing**: `Framing.RAW` reads one 8 KiB `recv`, and `OversizePolicy` says what happens to a full buffer.
+  `Framing.LENGTH_PREFIX` reads a 4-byte big-endian length, then the body (at most 1 MiB), and sends every reply
+  line as its own frame.
+- **TLS**: `tls_context=server_tls_context(certfile, keyfile)` wraps each connection (TLS 1.2 or later).
+- **Replies**: `ReplyMessages` holds the templates for a record line, each failure stage (JSON, refused by
+  `validate`, execution), an undecodable request, the quit reply, the authentication refusals and the log line.
+- **Authentication**: the base handler has none. `SecretHeaderRequestHandler` requires a first line
+  `<auth_prefix><secret>`. `EnvelopeTokenRequestHandler` accepts `{"token": ..., "command": ...}` and
+  `{"token": ..., "op": "quit"}`. Both compare secrets in constant time.
+
+Without authentication, bind the server only to a trusted interface.
+
+## Who uses it
 
 APITestka (`AT_`, port 9939), LoadDensity (`LD_`), MailThunder (`MT_`, port 9942) and FileAutomation (`FA_`) are
 the projects this package is for. `architecture.md` §6 lists which of them have moved to it and which pieces and

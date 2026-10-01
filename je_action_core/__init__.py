@@ -43,14 +43,20 @@ from je_action_core.package_manager import (
 )
 from je_action_core.registry import Command, CommandPolicy, CommandRegistry
 from je_action_core.reporting import ExecutionReporter, LoggingReporter, PrintReporter
+from je_action_core.socket_auth import EnvelopeTokenRequestHandler, SecretHeaderRequestHandler, secret_matches
 from je_action_core.socket_server import (
     END_MARKER,
+    MAX_FRAME_BYTES,
     MAX_PAYLOAD_BYTES,
     QUIT_COMMAND,
     ActionRequestHandler,
     ActionTCPServer,
+    FailureStage,
+    Framing,
     OversizePolicy,
+    ReplyMessages,
     SocketServerSettings,
+    server_tls_context,
     start_action_socket_server,
 )
 
@@ -68,6 +74,8 @@ __all__ = [
     "is_module_name",
     "Command", "CommandPolicy", "CommandRegistry",
     "ExecutionReporter", "LoggingReporter", "PrintReporter",
-    "END_MARKER", "MAX_PAYLOAD_BYTES", "QUIT_COMMAND", "ActionRequestHandler", "ActionTCPServer",
-    "OversizePolicy", "SocketServerSettings", "start_action_socket_server",
+    "END_MARKER", "MAX_FRAME_BYTES", "MAX_PAYLOAD_BYTES", "QUIT_COMMAND", "ActionRequestHandler", "ActionTCPServer",
+    "FailureStage", "Framing", "OversizePolicy", "ReplyMessages", "SocketServerSettings", "server_tls_context",
+    "start_action_socket_server",
+    "EnvelopeTokenRequestHandler", "SecretHeaderRequestHandler", "secret_matches",
 ]
