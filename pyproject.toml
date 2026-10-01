@@ -31,5 +31,8 @@ Code = "https://github.com/Integration-Automation/ActionCore"
 [tool.setuptools.packages.find]
 include = ["je_action_core*"]
 
+[tool.setuptools.package-data]
+je_action_core = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["test"]
