@@ -76,8 +76,9 @@ repository at a fixed commit.
 | Project | Pieces | Settings |
 |---|---|---|
 | APITestka (`AT_`, `api_testka`) | executor, registry, package manager, callback executor, JSON files, file listing, socket server (9939) | `LegacyActionParser`, plain record keys, `LoggingReporter`, `strip_runner_metadata` as `prepare`; functions-only registry; gate on, prefixed members, every load error logged; callback returns `None` on failure; socket reads the prefix and answers every error |
+| MailThunder (`MT_`, `mail_thunder`, legacy `auto_control`) | executor, registry, package manager, JSON files, file listing, socket server (9942) | `LegacyActionParser`, `EmptyListPolicy.RETURN_EMPTY`, plain record keys, `LoggingReporter` with its empty message, `SAFE_BUILTINS`; functions-only registry; gate off, identifier-path names, import and attribute errors logged; `from_document` in its payload check; socket rejects oversized payloads and answers `ValueError`, `OSError`, `TypeError` |
 
-LoadDensity, MailThunder and FileAutomation have not moved yet.
+LoadDensity and FileAutomation have not moved yet.
 
 **What the projects rely on here.** They rely on these, and none may change without changing the projects in
 the same round:
