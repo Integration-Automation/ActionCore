@@ -147,25 +147,36 @@ class PackageManager:
                     settings.log_error(repr(error))
         return self.installed_package_dict.get(package)
 
-    def add_package_to_executor(self, package: Any) -> int:
+    def add_package_to_executor(self, package: Any) -> None:
         """
-        Register ``package``'s members into :attr:`executor`; return how many were registered.
+        Register ``package``'s members into :attr:`executor`. Returns nothing, so the command's record stays
+        ``None``; :meth:`add_package_to_target` returns the count.
 
         :raises settings.refused: the package gate refused ``package`` (nothing is imported).
         """
         self.settings.log_info(f"PackageManager add_package_to_executor package: {package}")
         self._check_allowed(package)
-        return self.add_package_to_target(package, self.executor)
+        self.add_package_to_target(package, self.executor)
 
-    def add_package_to_callback_executor(self, package: Any) -> int:
+    def add_package_to_callback_executor(self, package: Any) -> None:
         """
-        Register ``package``'s members into :attr:`callback_executor`; return how many were registered.
+        Register ``package``'s members into :attr:`callback_executor` (see :meth:`add_package_to_executor`).
 
         :raises settings.refused: the package gate refused ``package`` (nothing is imported).
         """
         self.settings.log_info(f"PackageManager add_package_to_callback_executor package: {package}")
         self._check_allowed(package)
-        return self.add_package_to_target(package, self.callback_executor)
+        self.add_package_to_target(package, self.callback_executor)
+
+    def check_and_add(self, package: Any, target: Optional[Any]) -> int:
+        """
+        The gate, then :meth:`add_package_to_target`: register ``package``'s members into ``target`` and return
+        how many were registered.
+
+        :raises settings.refused: the package gate refused ``package`` (nothing is imported).
+        """
+        self._check_allowed(package)
+        return self.add_package_to_target(package, target)
 
     def add_package_to_target(self, package: Any, target: Optional[Any]) -> int:
         """Register the members matching every predicate; ``handled`` errors are logged, and the count so far kept."""

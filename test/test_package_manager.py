@@ -34,7 +34,7 @@ class TestGate:
     def test_unconfigured_gate_warns_but_loads(self):
         manager = _manager()
         with pytest.warns(DeprecationWarning, match="not on the allowlist"):
-            assert manager.add_package_to_executor("json") > 0
+            assert manager.add_package_to_executor("json") is None
         assert "json_dumps" in manager.executor.event_dict
 
     def test_closed_gate_refuses_before_importing(self):
@@ -92,9 +92,9 @@ class TestLoading:
     def test_missing_package_and_missing_target_are_logged(self):
         errors = []
         manager = _manager(gate=PackageGate.OFF, log_error=errors.append)
-        assert manager.add_package_to_executor("no_such_package_xyz") == 0
+        assert manager.add_package_to_target("no_such_package_xyz", manager.executor) == 0
         manager.executor = None
-        assert manager.add_package_to_executor("json") == 0
+        assert manager.add_package_to_target("json", manager.executor) == 0
         assert errors[0].startswith("ModuleNotFoundError(")
         assert errors[-1] == "Executor error None"
 
@@ -119,7 +119,17 @@ class TestLoading:
     def test_handled_errors_are_logged_instead_of_raised(self):
         errors = []
         manager = _manager(gate=PackageGate.OFF, handled=(ImportError,), log_error=errors.append)
-        assert manager.add_package_to_executor("no_parent_xyz.child") == 0
+        assert manager.add_package_to_target("no_parent_xyz.child", manager.executor) == 0
         assert errors and "ModuleNotFoundError" in errors[0]
         with pytest.raises(ImportError):
             _manager(gate=PackageGate.OFF).add_package_to_executor("no_parent_xyz.child")
+
+
+def test_check_and_add_applies_the_gate_and_counts():
+    manager = _manager(refused=KeyError)
+    target = types.SimpleNamespace(event_dict={})
+    with pytest.warns(DeprecationWarning):
+        assert manager.check_and_add("json", target) == len(target.event_dict) > 0
+    manager.set_allow_arbitrary_packages(False)
+    with pytest.raises(KeyError):
+        manager.check_and_add("os", target)
