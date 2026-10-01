@@ -17,7 +17,7 @@ settings: command prefix, document key, exceptions, messages and reporting. The 
 | `je_action_core/exceptions.py` | Default exceptions (`ActionCoreException` and one subclass per piece), used when a project passes none |
 | `je_action_core/registry.py` | `CommandRegistry` (name -> callable, `event_dict` is the live dict), `CommandPolicy` for caller-added commands |
 | `je_action_core/action_list.py` | `ActionListRules` (document key, legacy keys, empty-list policy, messages); `LegacyActionParser` and `StrictActionParser` bind one action to its command |
-| `je_action_core/executor.py` | `ActionExecutor` and `ExecutorSettings`; record-key functions |
+| `je_action_core/executor.py` | `ActionExecutor` and `ExecutorSettings`; record-key functions and `unique_record_key`, `DuplicateKeys`, `repr_failure`, the `ActionListSource` protocol |
 | `je_action_core/reporting.py` | `ExecutionReporter` hooks; `LoggingReporter` and `PrintReporter` |
 | `je_action_core/package_manager.py` | `PackageManager` (members as commands) behind the package gate; `PackageManagerSettings` |
 | `je_action_core/callback.py` | `CallbackFunctionExecutor` and `CallbackSettings` (legacy or strict checks, raise or return `None`) |
@@ -41,11 +41,17 @@ Nothing in the package imports a project; the projects import it.
 ## 4. Main flows
 
 - **`ActionExecutor.execute_action(action_list)`**:
-  1. `ActionListRules.extract` returns the list, raises, or returns `None` (run nothing, return `{}`).
-  2. For each action, `run_one` calls `_execute_event`: reporter `on_event`, then `prepare`, then
+  1. The reporter's `on_start` sees the list as given. Then `rules.extract` (`ActionListRules`, or anything with
+     `extract`) returns the list, raises, or returns `None` (`on_empty`; run nothing, return `{}`).
+  2. Each action passes `attempt`, which calls `_execute_event`: reporter `on_event`, then `prepare`, then
      `parser.bind`, then `invoke`.
-  3. `run_one` returns the result or `repr(error)`, and calls `on_success` or `on_failure`.
-  4. The result is stored under `record_key(index, action)`, and `on_records` sees the whole record.
+  3. Its record is the result, or `failure_record(action, error)` (`repr(error)` by default); `on_success` or
+     `on_failure` is called.
+  4. The record is stored under `record_key(index, action)`, numbered `#2`, `#3` … when `duplicate_keys` is
+     `NUMBER` and the key is taken. `on_records` sees the whole record.
+
+  `collect_action_results` runs the same steps without `on_records` and also returns the keys that failed.
+  `run_one` is steps 2 and 3 for one action.
 - **`PackageManager.add_package_to_executor(package)`**:
   1. `_check_allowed` applies the gate (refuse, allow, or warn).
   2. `check_package` validates the name, then `find_spec`, `import_module`, and caches the module.
@@ -68,7 +74,8 @@ Nothing in the package imports a project; the projects import it.
 
 - **Reporting**: subclass `ExecutionReporter`, or pass log hooks (`log_info`, `log_error`) to the settings of
   the package manager, callback executor, JSON file and socket server.
-- **Wrapping every command call** (tracing, metrics): override `ActionExecutor.invoke` or `run_one`.
+- **Wrapping every action** (retries, a span around the whole action): override `ActionExecutor.attempt`.
+  **Wrapping every command call** (tracing, metrics): override `ActionExecutor.invoke`.
 - **Action rules**: `ExecutorSettings.parser` takes any object with `bind(action, resolve)`; `prepare` rewrites
   an action before it is bound.
 - **Socket dialect**: subclass `ActionRequestHandler` and override the step that differs (`read_request`,
@@ -85,9 +92,9 @@ first and their minimum version raised in the same round.
 | Project | Pieces | Settings |
 |---|---|---|
 | APITestka (`AT_`, `api_testka`) | executor, registry, package manager, callback executor, JSON files, file listing, socket server (9939) | `LegacyActionParser`, plain record keys, `LoggingReporter`, `strip_runner_metadata` as `prepare`; functions-only registry; gate on, prefixed members, every load error logged; callback returns `None` on failure; socket reads the prefix and answers every error |
-| MailThunder (`MT_`, `mail_thunder`, legacy `auto_control`) | executor, registry, package manager, JSON files, file listing, socket server (9942) | `LegacyActionParser`, `EmptyListPolicy.RETURN_EMPTY`, plain record keys, `LoggingReporter` with its empty message, `SAFE_BUILTINS`; functions-only registry; gate off, identifier-path names, import and attribute errors logged; `from_document` in its payload check; socket rejects oversized payloads and answers `ValueError`, `OSError`, `TypeError` |
-| LoadDensity (`LD_`, `load_density`) | executor, registry, package manager, callback executor, JSON files | `LegacyActionParser`, plain record keys, `PrintReporter`, `SAFE_BUILTINS`; functions-only registry; gate off, bare member names, functions only, ASCII names, errors printed; callback raises after printing; JSON wraps every error. Its gevent socket server and file listing stay in LoadDensity |
-| FileAutomation (`FA_`, `auto_control`) | registry, executor pipeline, package loader, callback executor, JSON files | any-callable registry (`"<name> is not callable"`); `StrictActionParser`, `indexed_record_key`, its three list messages; tracing through `invoke`; `check_and_add` for the member count, gate off, `ImportError` logged; strict callback, errors raised; JSON wraps `JSONDecodeError` / `OSError` on read and `OSError` / `TypeError` on write. Dry run, validate, substitute, parallel runs, metrics and its servers stay in FileAutomation |
+| MailThunder (`MT_`, `mail_thunder`, legacy `auto_control`) | executor, registry, package manager, JSON files, file listing, socket server (9942) | `LegacyActionParser`, `EmptyListPolicy.RETURN_EMPTY`, plain record keys, `LoggingReporter` with its empty message, `SAFE_BUILTINS`; functions-only registry; gate on, identifier-path names, import and attribute errors logged; `from_document` in its payload check; socket rejects oversized payloads and answers `ValueError`, `OSError`, `TypeError` |
+| LoadDensity (`LD_`, `load_density`) | executor, registry, package manager, callback executor, JSON files, socket server (9940) | `LegacyActionParser`, plain record keys, `PrintReporter`, `SAFE_BUILTINS`; functions-only registry; gate on, bare member names, functions only, ASCII names, errors printed; callback raises after printing; JSON wraps every error; `EnvelopeTokenRequestHandler`, raw or `LENGTH_PREFIX` framing, optional TLS, `Error: <text>` replies, size-only log line, run under gevent. Its file listing stays in LoadDensity |
+| FileAutomation (`FA_`, `auto_control`) | registry, executor pipeline, package loader, callback executor, JSON files, TCP server (9943) | any-callable registry (`"<name> is not callable"`); `StrictActionParser`, `indexed_record_key`, its three list messages; tracing through `invoke`; `check_and_add` for the member count, gate off, `ImportError` logged; strict callback, errors raised; JSON wraps `JSONDecodeError` / `OSError` on read and `OSError` / `TypeError` on write; `SecretHeaderRequestHandler` (`AUTH <secret>`), the ACL as `validate`, `<key> -> <value>` records and prefixed error replies. Dry run, validate, substitute, parallel runs, metrics and its HTTP server stay in FileAutomation |
 
 **What the projects rely on here.** They rely on these, and none may change without changing the projects in
 the same round:

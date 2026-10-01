@@ -9,6 +9,9 @@ from typing import Any, Mapping
 class ExecutionReporter:
     """Hooks :class:`~je_action_core.executor.ActionExecutor` calls; this base class reports nothing."""
 
+    def on_start(self, action_list: Any) -> None:
+        """``action_list``, as given, is about to be checked and run."""
+
     def on_event(self, action: Any) -> None:
         """An action is about to be bound and run."""
 

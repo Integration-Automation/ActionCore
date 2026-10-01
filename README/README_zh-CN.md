@@ -65,7 +65,7 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 |---|---|---|
 | `registry` | `CommandRegistry`：按名称存放命令，`event_dict` 是实时的映射表 | 调用方新增的命令用 `CommandPolicy.FUNCTIONS_ONLY` 或 `ANY_CALLABLE` 判断；被拒绝时抛出的异常 |
 | `action_list` | `ActionListRules`（列表在哪里）、`LegacyActionParser` 与 `StrictActionParser` | 文档键与旧键（会发出 `DeprecationWarning`）；空列表要抛异常或返回 `{}`；错误消息 |
-| `executor` | `ActionExecutor`：`execute_action`、`execute_files`、`add_command_to_executor` | `ExecutorSettings`：规则、解析器、报告器、文件读取、记录键（`execute: …` 或 `execute[i]: …`）、action 改写 |
+| `executor` | `ActionExecutor`：`execute_action`、`collect_action_results`（记录与失败的键，不报告）、`execute_files`、`add_command_to_executor`；重写 `attempt` 可包住每个 action（重试、span） | `ExecutorSettings`：规则、解析器、报告器、文件读取、记录键（`execute: …` 或 `execute[i]: …`）、重复的键覆盖或编号（`#2`）、失败时记下什么（默认 `repr(error)`）、action 改写 |
 | `reporting` | `LoggingReporter`、`PrintReporter`，或自定义的 `ExecutionReporter` | 事件、失败与记录要送到哪里 |
 | `package_manager` | `PackageManager`：把已安装包的成员加载成命令，前面有[包闸门](#包闸门) | 成员命名（`<package>_<member>` 或不加前缀）、筛选条件、名称检查、要记录而不抛出的错误 |
 | `callback` | `CallbackFunctionExecutor`：先执行触发命令，再执行回调 | 旧版或严格检查；抛出异常，或记录后返回 `None` |
@@ -111,7 +111,7 @@ package_manager.set_allow_arbitrary_packages(False)   # 其他包在导入前就
 
 这个包是为 APITestka（`AT_`，端口 9939）、LoadDensity（`LD_`）、MailThunder（`MT_`，端口 9942）与
 FileAutomation（`FA_`）而做的。`architecture.md` §6 列出其中哪些已经改用它，以及各自用了哪些部件与配置。
-LoadDensity 与 FileAutomation 保留自己的 socket 服务器：一个是有分帧、令牌与 TLS 的 gevent 服务器，另一个有认证与访问控制列表。
+四个项目的 TCP 服务器都运行在 `socket_server` 上：LoadDensity 用 JSON 信封令牌、分帧与 TLS，FileAutomation 用 `AUTH` 标头与它的访问控制列表。
 
 ## 开发
 
