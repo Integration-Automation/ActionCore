@@ -3,3 +3,7 @@
 # uses only the standard library.
 build
 twine
+# The build backend. The job runs `python -m build --no-isolation`, so the backend is this locked one
+# and not whatever is newest on PyPI when the job runs. It must satisfy `build-system.requires` in
+# pyproject.toml.
+setuptools

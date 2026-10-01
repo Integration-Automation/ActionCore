@@ -26,8 +26,8 @@ settings: command prefix, document key, exceptions, messages and reporting. The 
 | `je_action_core/socket_server.py` | `ActionTCPServer` (`close_flag`, `close_event`, `request_stop`), the template `ActionRequestHandler`, `SocketServerSettings` (framing, TLS, `ReplyMessages`, secret), `server_tls_context`, `start_action_socket_server` |
 | `je_action_core/socket_auth.py` | `SecretHeaderRequestHandler` (`<prefix><secret>` first line) and `EnvelopeTokenRequestHandler` (JSON envelope token) |
 | `je_action_core/builtins_policy.py` | `SAFE_BUILTINS`, `safe_builtin_commands()` |
-| `test/` | One test module per piece, plus the workflow checks (pinned actions, Dependabot, the publish job's hash-locked tools) and the sdist manifest check (`MANIFEST.in` keeps `test/` out of the sdist) |
-| `.github/requirements/` | The hash-locked tool sets the workflows install, each generated from the `.in` beside it: `ci.txt` (the test job) and `publish.txt` (`build` and `twine`, the only install of the job that holds the PyPI token) |
+| `test/` | One test module per piece, plus the workflow checks (pinned actions, Dependabot, the publish job's hash-locked tools and build backend) and the sdist manifest check (`MANIFEST.in` keeps `test/` out of the sdist) |
+| `.github/requirements/` | The hash-locked tool sets the workflows install, each generated from the `.in` beside it: `ci.txt` (the test job) and `publish.txt` (`build`, `twine` and the build backend `setuptools`, the only install of the job that holds the PyPI token; it runs `python -m build --no-isolation`, so the build uses that locked backend instead of downloading the newest) |
 
 Nothing in the package imports a project; the projects import it.
 

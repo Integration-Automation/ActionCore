@@ -7,8 +7,8 @@ which is what Dependabot reads and updates. Pinning also keeps Node 20 actions
 from lingering unnoticed: GitHub removed Node 20 from its runners on 2026-09-23.
 
 The rest of the workflow supply chain is guarded here too: Dependabot's
-settings, checkout credentials, job timeouts, and the hash-locked tooling of
-the job that holds the PyPI token.
+settings, checkout credentials, job timeouts, and the hash-locked tooling and
+build backend of the job that holds the PyPI token.
 """
 from __future__ import annotations
 
@@ -201,10 +201,57 @@ def test_publish_job_installs_only_the_hash_locked_tooling(body):
     assert [command.strip() for command in _PIP_INSTALL.findall(body)] == [_LOCKED_INSTALL]
 
 
-def test_publish_in_lists_exactly_the_tools_the_job_runs():
-    # A tool the job starts using has to be locked first, or the release fails at that step.
+_BUILD = re.compile(r"\bpython3? -m build\b[^\n]*")
+_BUILD_REQUIRES = re.compile(r"^\[build-system\]\n(?:(?!\[).*\n)*?requires\s*=\s*\[([^\]]*)\]", re.MULTILINE)
+_REQUIREMENT = re.compile(r"([A-Za-z0-9][\w.-]*)\s*(?:>=\s*(\d+(?:\.\d+)*))?")
+
+
+def _version(text: str) -> tuple[int, ...]:
+    """Return a dotted release number as a tuple that compares in version order (``82.0`` equals ``82``)."""
+    return tuple(int(part) for part in re.sub(r"(\.0+)+$", "", text).split("."))
+
+
+def _build_requires() -> dict[str, tuple[int, ...]]:
+    """Return ``{distribution: lowest version allowed}`` for ``build-system.requires`` in ``pyproject.toml``.
+
+    An entry is a bare name or ``name>=version``. Any other form fails here, so the comparison with
+    the lock gets extended before such an entry is relied on.
+    """
+    text = (_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    entries = re.findall(r"[\"']([^\"']+)[\"']", _BUILD_REQUIRES.search(text).group(1))
+    matches = [_REQUIREMENT.fullmatch(entry.strip()) for entry in entries]
+    assert all(matches), entries
+    return {_distribution(match.group(1)): _version(match.group(2) or "0") for match in matches}
+
+
+def _locked_version(distribution: str) -> tuple[int, ...]:
+    """Return the version ``publish.txt`` pins for ``distribution``."""
+    lock = (_REQUIREMENTS / "publish.txt").read_text(encoding="utf-8")
+    pin = re.search(rf"^{re.escape(distribution)}==(\d+(?:\.\d+)*)\s", lock, re.MULTILINE)
+    return _version(pin.group(1))
+
+
+def test_publish_in_lists_exactly_the_tools_the_job_runs_and_the_build_backend():
+    # A tool the job starts using has to be locked first, or the release fails at that step. The job
+    # never names the build backend: python -m build --no-isolation imports the one installed here.
     used = set().union(*(_tools(body) for _name, body in _PUBLISH_JOBS))
-    assert used == _requirements("publish.in")
+    assert used | set(_build_requires()) == _requirements("publish.in")
+
+
+@pytest.mark.parametrize("body", [body for _name, body in _PUBLISH_JOBS], ids=[name for name, _body in _PUBLISH_JOBS])
+def test_publish_job_builds_with_the_locked_backend(body):
+    # An isolated build downloads the newest release that build-system.requires allows, outside the
+    # lock, and runs it in the job that is about to upload with the token.
+    builds = _BUILD.findall(body)
+    assert builds and all("--no-isolation" in command.split() for command in builds)
+
+
+def test_the_locked_build_backend_satisfies_build_system_requires():
+    # --no-isolation checks build-system.requires instead of installing it, so a floor raised without
+    # regenerating the lock (Dependabot edits pyproject.toml) has to fail here, not in the publish job.
+    required = _build_requires()
+    assert required and set(required) <= _requirements("publish.txt")
+    assert {name: floor for name, floor in required.items() if _locked_version(name) < floor} == {}
 
 
 def test_publish_lock_pins_every_tool_of_publish_in():

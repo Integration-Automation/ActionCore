@@ -58,6 +58,7 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261001-12 | 2026-10-01 | The publish job builds with the locked setuptools instead of downloading the newest | #change #ci #security #X-13 | [2026-10](2026-10.md) |
 | U-20261001-11 | 2026-10-01 | Publish job installs hash-locked build tooling | #done #ci #security #X-13 | [2026-10](2026-10.md) |
 | U-20261001-10 | 2026-10-01 | The sdist carries no tests | #done #packaging #X-13 | [2026-10](2026-10.md) |
 | U-20261001-09 | 2026-10-01 | WebRunner's executor runs on the core | #done #executor #webrunner | [2026-10](2026-10.md) |
@@ -74,4 +75,4 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | File | Period | Entries |
 |---|---|---:|
-| [2026-10.md](2026-10.md) | 2026-10 | 11 |
+| [2026-10.md](2026-10.md) | 2026-10 | 12 |
