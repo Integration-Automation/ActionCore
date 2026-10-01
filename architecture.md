@@ -70,8 +70,8 @@ Nothing in the package imports a project; the projects import it.
 ## 6. Cross-project boundaries
 
 **Used by.** Each project that moves adds a row here; the same round updates that project's own
-`architecture.md` §6. Until the package is on PyPI, a project's CI and `[tool.uv.sources]` install it from this
-repository at a fixed commit.
+`architecture.md` §6. The projects install it from PyPI (`je_action_core>=0.0.1`); a change they need is released
+first and their minimum version raised in the same round.
 
 | Project | Pieces | Settings |
 |---|---|---|
