@@ -65,7 +65,7 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 |---|---|---|
 | `registry` | `CommandRegistry`：依名稱存放命令，`event_dict` 是即時的對應表 | 呼叫端新增的命令用 `CommandPolicy.FUNCTIONS_ONLY` 或 `ANY_CALLABLE` 判斷；被拒絕時丟出的例外 |
 | `action_list` | `ActionListRules`（清單在哪裡）、`LegacyActionParser` 與 `StrictActionParser` | 文件鍵與舊鍵（會發出 `DeprecationWarning`）；空清單要丟例外或回傳 `{}`；錯誤訊息 |
-| `executor` | `ActionExecutor`：`execute_action`、`execute_files`、`add_command_to_executor` | `ExecutorSettings`：規則、解析器、回報器、檔案讀取、紀錄鍵（`execute: …` 或 `execute[i]: …`）、action 改寫 |
+| `executor` | `ActionExecutor`：`execute_action`、`collect_action_results`（紀錄與失敗的鍵，不回報）、`execute_files`、`add_command_to_executor`；覆寫 `attempt` 可包住每個 action（重試、span） | `ExecutorSettings`：規則、解析器、回報器、檔案讀取、紀錄鍵（`execute: …` 或 `execute[i]: …`）、重複的鍵覆蓋或編號（`#2`）、失敗時記下什麼（預設 `repr(error)`）、action 改寫 |
 | `reporting` | `LoggingReporter`、`PrintReporter`，或自訂的 `ExecutionReporter` | 事件、失敗與紀錄要送到哪裡 |
 | `package_manager` | `PackageManager`：把已安裝套件的成員載入成命令，前面有[套件閘門](#套件閘門) | 成員命名（`<package>_<member>` 或不加前綴）、篩選條件、名稱檢查、要記錄而不丟出的錯誤 |
 | `callback` | `CallbackFunctionExecutor`：先執行觸發命令，再執行回呼 | 舊版或嚴格檢查；丟出例外，或記錄後回傳 `None` |

@@ -69,7 +69,7 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 |---|---|---|
 | `registry` | `CommandRegistry`: commands by name, `event_dict` as the live mapping | `CommandPolicy.FUNCTIONS_ONLY` or `ANY_CALLABLE` for caller-added commands; the exception for a refused one |
 | `action_list` | `ActionListRules` (where the list is), `LegacyActionParser` and `StrictActionParser` | document key and legacy keys (with a `DeprecationWarning`); empty list raises or returns `{}`; error messages |
-| `executor` | `ActionExecutor`: `execute_action`, `execute_files`, `add_command_to_executor` | `ExecutorSettings`: rules, parser, reporter, file reader, record key (`execute: …` or `execute[i]: …`), action rewrite |
+| `executor` | `ActionExecutor`: `execute_action`, `collect_action_results` (records and the failed keys, unreported), `execute_files`, `add_command_to_executor`; override `attempt` to wrap every action (retries, a span) | `ExecutorSettings`: rules, parser, reporter, file reader, record key (`execute: …` or `execute[i]: …`), repeated keys replaced or numbered (`#2`), what a failure records (`repr(error)` by default), action rewrite |
 | `reporting` | `LoggingReporter`, `PrintReporter`, or your own `ExecutionReporter` | where events, failures and records go |
 | `package_manager` | `PackageManager`: load an installed package's members as commands, behind the [package gate](#package-gate) | member naming (`<package>_<member>` or bare), predicates, name check, errors to log |
 | `callback` | `CallbackFunctionExecutor`: run a trigger, then a callback | legacy or strict checking; raise or log and return `None` |

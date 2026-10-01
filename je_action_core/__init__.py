@@ -24,7 +24,16 @@ from je_action_core.exceptions import (
     CallbackExecutorException,
     PackageNotAllowedException,
 )
-from je_action_core.executor import ActionExecutor, ExecutorSettings, indexed_record_key, plain_record_key
+from je_action_core.executor import (
+    ActionExecutor,
+    ActionListSource,
+    DuplicateKeys,
+    ExecutorSettings,
+    indexed_record_key,
+    plain_record_key,
+    repr_failure,
+    unique_record_key,
+)
 from je_action_core.file_listing import get_dir_files_as_list
 from je_action_core.json_io import (
     ActionJsonFile,
@@ -67,7 +76,8 @@ __all__ = [
     "CallbackErrorPolicy", "CallbackFunctionExecutor", "CallbackSettings", "CallbackStyle",
     "ActionCoreException", "ActionExecuteException", "ActionJsonException", "AddCommandException",
     "CallbackExecutorException", "PackageNotAllowedException",
-    "ActionExecutor", "ExecutorSettings", "indexed_record_key", "plain_record_key",
+    "ActionExecutor", "ActionListSource", "DuplicateKeys", "ExecutorSettings", "indexed_record_key",
+    "plain_record_key", "repr_failure", "unique_record_key",
     "get_dir_files_as_list",
     "ActionJsonFile", "JsonFileMessages", "JsonFileSettings", "read_action_json", "write_action_json",
     "MemberNaming", "PackageGate", "PackageManager", "PackageManagerSettings", "is_identifier_path",

@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Callable, Dict, Optional, Type, Union, cast
 
 from je_action_core.exceptions import CallbackExecutorException
 from je_action_core.registry import Command, CommandRegistry
@@ -116,7 +116,8 @@ class CallbackFunctionExecutor:
         if method == "kwargs":
             if self.settings.style is CallbackStyle.STRICT and not isinstance(param, Mapping):
                 raise self.settings.error("callback_param_method='kwargs' requires a mapping payload")
-            callback(**param)
+            # LEGACY passes any payload on, and a non-mapping fails in the call as it always has
+            callback(**cast(Mapping[str, Any], param))
             return
         if self.settings.style is CallbackStyle.STRICT and not isinstance(param, (list, tuple)):
             raise self.settings.error("callback_param_method='args' requires a list/tuple payload")
