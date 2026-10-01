@@ -26,7 +26,7 @@ settings: command prefix, document key, exceptions, messages and reporting. The 
 | `je_action_core/socket_server.py` | `ActionTCPServer` (`close_flag`, `close_event`, `request_stop`), the template `ActionRequestHandler`, `SocketServerSettings` (framing, TLS, `ReplyMessages`, secret), `server_tls_context`, `start_action_socket_server` |
 | `je_action_core/socket_auth.py` | `SecretHeaderRequestHandler` (`<prefix><secret>` first line) and `EnvelopeTokenRequestHandler` (JSON envelope token) |
 | `je_action_core/builtins_policy.py` | `SAFE_BUILTINS`, `safe_builtin_commands()` |
-| `test/` | One test module per piece, plus the workflow pinning checks |
+| `test/` | One test module per piece, plus the workflow pinning checks and the sdist manifest check (`MANIFEST.in` keeps `test/` out of the sdist) |
 
 Nothing in the package imports a project; the projects import it.
 
