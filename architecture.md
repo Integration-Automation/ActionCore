@@ -23,7 +23,8 @@ settings: command prefix, document key, exceptions, messages and reporting. The 
 | `je_action_core/callback.py` | `CallbackFunctionExecutor` and `CallbackSettings` (legacy or strict checks, raise or return `None`) |
 | `je_action_core/json_io.py` | `ActionJsonFile` (UTF-8, locked, project exception and message templates) and default `read_action_json` / `write_action_json` |
 | `je_action_core/file_listing.py` | `get_dir_files_as_list` |
-| `je_action_core/socket_server.py` | `ActionTCPServer`, `ActionRequestHandler`, `start_action_socket_server` |
+| `je_action_core/socket_server.py` | `ActionTCPServer` (`close_flag`, `close_event`, `request_stop`), the template `ActionRequestHandler`, `SocketServerSettings` (framing, TLS, `ReplyMessages`, secret), `server_tls_context`, `start_action_socket_server` |
+| `je_action_core/socket_auth.py` | `SecretHeaderRequestHandler` (`<prefix><secret>` first line) and `EnvelopeTokenRequestHandler` (JSON envelope token) |
 | `je_action_core/builtins_policy.py` | `SAFE_BUILTINS`, `safe_builtin_commands()` |
 | `test/` | One test module per piece, plus the workflow pinning checks |
 
@@ -53,9 +54,15 @@ Nothing in the package imports a project; the projects import it.
 - **`CallbackFunctionExecutor.callback_function`**: looks the trigger up, then (strict style only) checks the
   method, calls the trigger with `kwargs`, then calls the callback with no arguments, `**param` or `*param`.
   Errors are logged and then raised or turned into `None`.
-- **Socket server**: receives one document per connection (8192 bytes), then either `quit_server` or
-  `json.loads`, the optional `validate`, and `execute`. It replies with one line per value, then
-  `Return_Data_Over_JE`; handled errors reply with their text and the marker.
+- **Socket server** (`ActionRequestHandler.handle`, a template):
+  1. `secure` wraps the connection in TLS when configured.
+  2. `read_request` reads one 8 KiB `recv` or one length-prefixed frame.
+  3. `decode` turns the bytes into text.
+  4. `process` logs the request, then either handles `quit_server` (`on_quit`) or runs `run_text`:
+     `json.loads`, then `run_document` (`validate`, `execute`, one line per record, the end marker).
+  5. A failure is answered by `reply_failure(stage)` with that stage's template.
+
+  The dialects override `process`: the secret header is checked first, or the JSON envelope is unwrapped.
 
 ## 5. Extension points
 
@@ -64,14 +71,16 @@ Nothing in the package imports a project; the projects import it.
 - **Wrapping every command call** (tracing, metrics): override `ActionExecutor.invoke` or `run_one`.
 - **Action rules**: `ExecutorSettings.parser` takes any object with `bind(action, resolve)`; `prepare` rewrites
   an action before it is bound.
+- **Socket dialect**: subclass `ActionRequestHandler` and override the step that differs (`read_request`,
+  `decode`, `process`, `on_quit`, `write`); pass it as `handler_class` to `start_action_socket_server`.
 - **New piece**: add a module, export it in `__init__.py` and `__all__`, add `test/test_<piece>.py`, and add a
   row to §2 and to the README's table (three languages).
 
 ## 6. Cross-project boundaries
 
 **Used by.** Each project that moves adds a row here; the same round updates that project's own
-`architecture.md` §6. Until the package is on PyPI, a project's CI and `[tool.uv.sources]` install it from this
-repository at a fixed commit.
+`architecture.md` §6. The projects install it from PyPI (`je_action_core>=0.0.1`); a change they need is released
+first and their minimum version raised in the same round.
 
 | Project | Pieces | Settings |
 |---|---|---|

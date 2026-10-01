@@ -71,7 +71,7 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 | `callback` | `CallbackFunctionExecutor`：先执行触发命令，再执行回调 | 旧版或严格检查；抛出异常，或记录后返回 `None` |
 | `json_io` | `ActionJsonFile`、`read_action_json`、`write_action_json`：UTF-8、加锁、保留非 ASCII 文本 | 异常类与消息模板 |
 | `file_listing` | `get_dir_files_as_list`：找出目录下的 action 文件 | — |
-| `socket_server` | `start_action_socket_server`：普通的 TCP action 服务器 | 执行器、内容检查、要回复的错误、过大内容的处理方式 |
+| `socket_server`、`socket_auth` | `start_action_socket_server` 与请求处理器（无认证、密钥标头、JSON 信封令牌） | 执行器、内容检查、要回复的错误、分帧、TLS、回复模板、密钥 |
 | `builtins_policy` | `SAFE_BUILTINS`：action 列表可以调用的内置函数 | — |
 
 `je_action_core/__init__.py` 里的 `__all__` 是正式支持的导入接口。
@@ -92,9 +92,20 @@ package_manager.set_allow_arbitrary_packages(False)   # 其他包在导入前就
 
 ## Socket 服务器协议
 
-`start_action_socket_server(host, port, settings)` 在后台线程上提供服务。客户端每次连接发送一份 JSON action
-文档；服务器把每条记录的值各自回复成一行，最后是 `Return_Data_Over_JE`。失败时回复错误文本与同一个结束标记。
-`quit_server` 会停止服务器并设置 `close_flag`。服务器没有认证机制，只能绑定在可信任的网络接口上。
+`start_action_socket_server(host, port, settings, handler_class=ActionRequestHandler)` 在后台线程上提供服务。
+客户端每次连接发送一份 JSON action 文档；服务器每条记录回复一行，最后是 `Return_Data_Over_JE`。失败时回复错误
+文本与同一个结束标记。`quit_server` 会停止服务器并设置 `close_flag` 与 `close_event`。可以配置的有：
+
+- **分帧**：`Framing.RAW` 读一次 8 KiB 的 `recv`，缓冲区被填满时怎么处理由 `OversizePolicy` 决定；
+  `Framing.LENGTH_PREFIX` 先读 4 字节的大端序长度，再读内容（最多 1 MiB），每一行回复都是一个独立的帧。
+- **TLS**：`tls_context=server_tls_context(certfile, keyfile)` 会包住每一条连接（TLS 1.2 以上）。
+- **回复**：`ReplyMessages` 是各种回复的模板：记录行、每个失败阶段（JSON、被 `validate` 拒绝、执行）、
+  无法解码的请求、quit 的回复、认证拒绝，以及日志行。
+- **认证**：基本的处理器没有认证。`SecretHeaderRequestHandler` 要求第一行是 `<auth_prefix><secret>`；
+  `EnvelopeTokenRequestHandler` 接受 `{"token": ..., "command": ...}` 与 `{"token": ..., "op": "quit"}`。
+  两者都以固定时间比对密钥。
+
+没有认证时，服务器只能绑定在可信任的网络接口上。
 
 ## 谁在使用
 
