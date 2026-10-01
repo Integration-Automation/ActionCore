@@ -18,7 +18,7 @@ from je_action_core.exceptions import ActionExecuteException
 Resolver = Callable[[Any], Optional[Callable[..., Any]]]
 _NAME_ONLY: int = 1
 _NAME_AND_PAYLOAD: int = 2
-# warnings.warn -> _from_document -> extract -> ActionExecutor.execute_action -> the caller of execute_action
+# warnings.warn -> from_document -> extract -> ActionExecutor.execute_action -> the caller of execute_action
 _LEGACY_KEY_STACKLEVEL: int = 4
 
 
@@ -55,7 +55,7 @@ class ActionListRules:
         """
         actions = action_list
         if isinstance(action_list, Mapping):
-            actions = self._from_document(action_list)
+            actions = self.from_document(action_list, stacklevel=_LEGACY_KEY_STACKLEVEL)
             if actions is None:
                 raise self.error(self.missing_message.format(key=self.key))
         if isinstance(actions, list) and actions:
@@ -66,13 +66,17 @@ class ActionListRules:
             raise self.error(self.not_list_message.format(type=type(actions).__name__))
         raise self.error(self.empty_message)
 
-    def _from_document(self, document: Mapping[str, Any]) -> Any:
+    def from_document(self, document: Mapping[str, Any], stacklevel: int = 2) -> Any:
+        """
+        The value under :attr:`key`, else under the first legacy key present (with a ``DeprecationWarning``
+        attributed ``stacklevel`` frames up), else ``None``. The value is returned as found, unchecked.
+        """
         if self.key in document:
             return document[self.key]
         for legacy_key in self.legacy_keys:
             if legacy_key in document:
                 warnings.warn(f'the "{legacy_key}" key is deprecated; use "{self.key}"', DeprecationWarning,
-                              stacklevel=_LEGACY_KEY_STACKLEVEL)
+                              stacklevel=stacklevel)
                 return document[legacy_key]
         return None
 

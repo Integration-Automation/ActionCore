@@ -58,10 +58,11 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261001-02 | 2026-10-01 | ActionListRules.from_document is public | #change #action-list | [2026-10](2026-10.md) |
 | U-20261001-01 | 2026-10-01 | je_action_core: the shared action executor | #migration #L-6 #X-12 | [2026-10](2026-10.md) |
 
 ## Batches
 
 | File | Period | Entries |
 |---|---|---:|
-| [2026-10.md](2026-10.md) | 2026-10 | 1 |
+| [2026-10.md](2026-10.md) | 2026-10 | 2 |

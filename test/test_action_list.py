@@ -52,6 +52,15 @@ class TestActionListRules:
             assert rules.extract({"mail_thunder": [["f"]], "auto_control": []}) == [["f"]]
 
 
+    def test_from_document_returns_the_value_unchecked(self):
+        rules = ActionListRules("mail_thunder", legacy_keys=("auto_control",))
+        assert rules.from_document({"mail_thunder": "not a list"}) == "not a list"
+        assert rules.from_document({"other": []}) is None
+        with pytest.warns(DeprecationWarning) as caught:
+            assert rules.from_document({"auto_control": []}) == []
+        assert caught[0].filename == __file__
+
+
 class TestLegacyActionParser:
 
     def test_shapes(self):
