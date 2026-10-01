@@ -111,7 +111,7 @@ package_manager.set_allow_arbitrary_packages(False)   # 其他包在导入前就
 
 这个包是为 APITestka（`AT_`，端口 9939）、LoadDensity（`LD_`）、MailThunder（`MT_`，端口 9942）与
 FileAutomation（`FA_`）而做的。`architecture.md` §6 列出其中哪些已经改用它，以及各自用了哪些部件与配置。
-LoadDensity 与 FileAutomation 保留自己的 socket 服务器：一个是有分帧、令牌与 TLS 的 gevent 服务器，另一个有认证与访问控制列表。
+四个项目的 TCP 服务器都运行在 `socket_server` 上：LoadDensity 用 JSON 信封令牌、分帧与 TLS，FileAutomation 用 `AUTH` 标头与它的访问控制列表。
 
 ## 开发
 

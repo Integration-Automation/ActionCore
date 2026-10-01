@@ -111,7 +111,7 @@ package_manager.set_allow_arbitrary_packages(False)   # 其他套件在匯入前
 
 這個套件是為 APITestka（`AT_`，埠號 9939）、LoadDensity（`LD_`）、MailThunder（`MT_`，埠號 9942）與
 FileAutomation（`FA_`）而做的。`architecture.md` §6 列出其中哪些已經改用它，以及各自用了哪些元件與設定。
-LoadDensity 與 FileAutomation 保留自己的 socket 伺服器：一個是有分框、權杖與 TLS 的 gevent 伺服器，另一個有驗證與存取控制清單。
+四個專案的 TCP 伺服器都跑在 `socket_server` 上：LoadDensity 用 JSON 信封權杖、分框與 TLS，FileAutomation 用 `AUTH` 標頭與它的存取控制清單。
 
 ## 開發
 

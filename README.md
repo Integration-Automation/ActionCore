@@ -118,8 +118,8 @@ Without authentication, bind the server only to a trusted interface.
 
 APITestka (`AT_`, port 9939), LoadDensity (`LD_`), MailThunder (`MT_`, port 9942) and FileAutomation (`FA_`) are
 the projects this package is for. `architecture.md` §6 lists which of them have moved to it and which pieces and
-settings each one uses. LoadDensity and FileAutomation keep their own socket servers: a gevent server with
-framing, a token and TLS, and a server with authentication and an ACL.
+settings each one uses. All four run their TCP servers on `socket_server`: LoadDensity with the JSON-envelope
+token, framing and TLS, FileAutomation with the `AUTH` header and its ACL.
 
 n and an ACL.
 

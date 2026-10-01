@@ -58,6 +58,7 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261001-07 | 2026-10-01 | LoadDensity's and FileAutomation's servers run on the core | #done #socket-server | [2026-10](2026-10.md) |
 | U-20261001-06 | 2026-10-01 | Socket server: template handler, framing, TLS, two auth dialects | #change #socket-server | [2026-10](2026-10.md) |
 | U-20261001-05 | 2026-10-01 | First PyPI release: 0.0.1 | #done #release | [2026-10](2026-10.md) |
 | U-20261001-04 | 2026-10-01 | The package ships py.typed | #change #typing | [2026-10](2026-10.md) |
@@ -69,4 +70,4 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | File | Period | Entries |
 |---|---|---:|
-| [2026-10.md](2026-10.md) | 2026-10 | 6 |
+| [2026-10.md](2026-10.md) | 2026-10 | 7 |

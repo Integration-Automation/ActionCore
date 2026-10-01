@@ -6,5 +6,4 @@ Cross-repo and workspace items live in `D:\Codes\progress.md` (relevant here: L-
 
 ## Open
 
-- **#2** [DECIDE] Fold LoadDensity's socket server (gevent, optional length framing, token, TLS) and FileAutomation's (loopback only, `AUTH`, ACL, `key -> value` replies) into `socket_server.py` as settings, or keep them in their projects. WebRunner's server has the same framing and token options.
 - **#3** [DECIDE] Move WebRunner's executor onto this package too. It already has the package gate and `SAFE_BUILTINS`, but differs in `[cmd, [args], {kwargs}]` actions, `restricted()`, retries and spans.
