@@ -1,0 +1,5 @@
+# What the publish job installs; publish.txt is generated from this file (the command is in publish.yml).
+# The job holds the PyPI token: build makes the distributions and twine uploads them. Its version bump
+# uses only the standard library.
+build
+twine
