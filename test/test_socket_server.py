@@ -20,10 +20,14 @@ def _ask(port: int, payload: bytes) -> str:
     with socket.create_connection(("127.0.0.1", port), timeout=_TIMEOUT_SECONDS) as client:
         client.sendall(payload)
         chunks = []
-        chunk = client.recv(4096)
-        while chunk:  # the server closes the connection after its reply
-            chunks.append(chunk)
+        try:
             chunk = client.recv(4096)
+            while chunk:  # the server closes the connection after its reply
+                chunks.append(chunk)
+                chunk = client.recv(4096)
+        except ConnectionResetError:
+            # Closing with unread input (a rejected payload) is a reset on some systems (macOS): no more reply.
+            pass
     return b"".join(chunks).decode("utf-8")
 
 
