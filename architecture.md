@@ -86,6 +86,13 @@ Nothing in the package imports a project; the projects import it.
 
 ## 6. Cross-project boundaries
 
+`request_record.py` owns the separate RequestRecord v1 contract (TypedDict, validator, JSON serializer
+and JSON Schema); `request_context.py` owns explicit `RunContext` storage and ContextVar scopes.
+They use only the standard library and do not alter executor action records. Framework adapters remain
+in the consumers. Contexts retain complete runs; consumers must rotate/persist long-lived monitoring runs.
+New consumers are developed against isolated checkouts until the core release exposes these APIs;
+their existing package imports must remain usable with the previously published dependency floor.
+
 **Used by.** Each project that moves adds a row here; the same round updates that project's own
 `architecture.md` §6. The projects install it from PyPI (`je_action_core>=0.0.1` to `>=0.0.3`, each the release that
 has what it uses); a change they need is released first and their minimum version raised in the same round.

@@ -77,8 +77,26 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 | `file_listing` | `get_dir_files_as_list`: action files under a directory | — |
 | `socket_server`, `socket_auth` | `start_action_socket_server` and the request handlers (plain, secret header, JSON-envelope token) | executor, payload check, errors answered, framing, TLS, reply templates, secret |
 | `builtins_policy` | `SAFE_BUILTINS`: the builtins an action list may call | — |
+| `request_record`, `request_context` | Versioned request-result validation, JSON serialization/schema and isolated `RunContext` storage | source, phase, engine, worker and run identities |
 
 `__all__` in `je_action_core/__init__.py` is the supported import surface.
+
+## Request results
+
+Request results are separate from executor action records. `RequestRecord` v1 gives functional,
+load and synthetic runs the same method/URL, numeric status, nullable measurements, structured error,
+assertions and run/worker/step identities. `validate_request_record` returns a detached JSON-safe result;
+`serialize_request_record` exports it and `request_record_schema` describes the contract.
+Bytes become base64 objects, datetimes become epoch seconds and timedeltas become milliseconds.
+Unknown versions, invalid fields, non-finite measurements and opaque objects raise `RequestRecordError`.
+
+`RunContext(source="loaddensity", phase="load", engine="asyncio")` owns one run's records.
+Use `capture(fields)` for a new result, `append(record)` for a validated retry, `snapshot()` for a detached
+copy and `to_json()` for an array export. Identical record IDs deduplicate; conflicting retries and foreign
+run identities raise an error. `use_run_context(context)` activates it for a thread/task scope and restores
+the previous context on exit; `get_run_context()` returns the active context or `None`.
+Storage retains the complete run; long-lived monitors should create a new context per iteration and persist results.
+The contract records the runner's judgement and does not decide whether a status code is successful.
 
 ## Package gate
 

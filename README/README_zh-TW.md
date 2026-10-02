@@ -73,8 +73,24 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 | `file_listing` | `get_dir_files_as_list`：找出目錄底下的 action 檔 | — |
 | `socket_server`、`socket_auth` | `start_action_socket_server` 與請求處理器（無驗證、祕密標頭、JSON 信封權杖） | 執行器、內容檢查、要回覆的錯誤、分框、TLS、回覆範本、祕密 |
 | `builtins_policy` | `SAFE_BUILTINS`：action 清單可以呼叫的內建函式 | — |
+| `request_record`、`request_context` | 版本化 request 結果驗證、JSON 序列化／schema 與隔離的 `RunContext` 儲存 | 來源、階段、引擎、worker 與 run 識別 |
 
 `je_action_core/__init__.py` 裡的 `__all__` 是正式支援的匯入介面。
+
+## Request 結果
+
+Request 結果與 executor 的 action 紀錄分開。`RequestRecord` v1 讓功能、負載與合成監控使用
+相同的方法／URL、數字狀態碼、可為 null 的量測值、結構化錯誤、assertion 與 run／worker／step 識別。
+`validate_request_record` 回傳隔離且可序列化的結果；`serialize_request_record` 輸出 JSON，
+`request_record_schema` 描述契約。bytes 轉成 base64 物件、datetime 轉成 epoch 秒、timedelta 轉成毫秒。
+未知版本、非法欄位、非有限量測值與不支援的物件會引發 `RequestRecordError`。
+
+`RunContext(source="loaddensity", phase="load", engine="asyncio")` 保存一次執行的紀錄。
+`capture(fields)` 新增結果，`append(record)` 接收已驗證的重送，`snapshot()` 取得隔離副本，
+`to_json()` 輸出陣列。同 ID 的相同結果不重複計數；衝突結果與其他 run 的識別會引發錯誤。
+`use_run_context(context)` 在執行緒／task 範圍啟用它，離開時還原原 context；
+`get_run_context()` 回傳目前 context 或 `None`。儲存保留整次執行，長期監控應每輪建立新 context 並持久化結果。
+契約保存 runner 的判定，不自行決定狀態碼是否成功。
 
 ## 套件閘門
 

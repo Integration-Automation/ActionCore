@@ -58,6 +58,7 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261002-01 | 2026-10-02 | Add versioned request records and isolated run contexts | #done #records | [2026-10](2026-10.md) |
 | U-20261001-12 | 2026-10-01 | The publish job builds with the locked setuptools instead of downloading the newest | #change #ci #security #X-13 | [2026-10](2026-10.md) |
 | U-20261001-11 | 2026-10-01 | Publish job installs hash-locked build tooling | #done #ci #security #X-13 | [2026-10](2026-10.md) |
 | U-20261001-10 | 2026-10-01 | The sdist carries no tests | #done #packaging #X-13 | [2026-10](2026-10.md) |

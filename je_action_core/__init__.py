@@ -52,6 +52,15 @@ from je_action_core.package_manager import (
 )
 from je_action_core.registry import Command, CommandPolicy, CommandRegistry
 from je_action_core.reporting import ExecutionReporter, LoggingReporter, PrintReporter
+from je_action_core.request_context import RunContext, get_run_context, use_run_context
+from je_action_core.request_record import (
+    RecordError,
+    RequestRecord,
+    RequestRecordError,
+    request_record_schema,
+    serialize_request_record,
+    validate_request_record,
+)
 from je_action_core.socket_auth import EnvelopeTokenRequestHandler, SecretHeaderRequestHandler, secret_matches
 from je_action_core.socket_server import (
     END_MARKER,
@@ -88,4 +97,7 @@ __all__ = [
     "FailureStage", "Framing", "OversizePolicy", "ReplyMessages", "SocketServerSettings", "server_tls_context",
     "start_action_socket_server",
     "EnvelopeTokenRequestHandler", "SecretHeaderRequestHandler", "secret_matches",
+    "RecordError", "RequestRecord", "RequestRecordError", "request_record_schema",
+    "serialize_request_record", "validate_request_record",
+    "RunContext", "get_run_context", "use_run_context",
 ]
