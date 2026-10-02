@@ -73,8 +73,30 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 | `file_listing` | `get_dir_files_as_list`：找出目录下的 action 文件 | — |
 | `socket_server`、`socket_auth` | `start_action_socket_server` 与请求处理器（无认证、密钥标头、JSON 信封令牌） | 执行器、内容检查、要回复的错误、分帧、TLS、回复模板、密钥 |
 | `builtins_policy` | `SAFE_BUILTINS`：action 列表可以调用的内置函数 | — |
+| `request_record`、`request_context` | 版本化 request 结果验证、JSON 序列化／schema 与隔离的 `RunContext` 存储 | 来源、阶段、引擎、worker 与 run 标识 |
 
 `je_action_core/__init__.py` 里的 `__all__` 是正式支持的导入接口。
+
+## Request 结果
+
+HTTP `request_method`: uppercase ASCII token; schema and Python validation enforce the same rule.
+
+Run identity 在 context 创建时即验证。重送以排序对象键后的 JSON 内容比较，区分布尔值与数字。
+断言信息存在时必须是字符串，失败断言必须带信息。超过可移植 JSON 转换限制的整数及无法表示的测量值
+会产生包含字段位置的契约错误。
+
+Request 结果与 executor 的 action 记录分开。`RequestRecord` v1 让功能、负载与合成监控使用
+相同的方法／URL、数字状态码、可为 null 的测量值、结构化错误、assertion 与 run／worker／step 标识。
+`validate_request_record` 返回隔离且可序列化的结果；`serialize_request_record` 输出 JSON，
+`request_record_schema` 描述契约。bytes 转为 base64 对象、datetime 转为 epoch 秒、timedelta 转为毫秒。
+未知版本、非法字段、非有限测量值与不支持的对象会引发 `RequestRecordError`。
+
+`RunContext(source="loaddensity", phase="load", engine="asyncio")` 保存一次运行的记录。
+`capture(fields)` 添加结果，`append(record)` 接收已验证的重发，`snapshot()` 获取隔离副本，
+`to_json()` 输出数组。同 ID 的相同结果不重复计数；冲突结果与其他 run 的标识会引发错误。
+`use_run_context(context)` 在线程／task 范围启用它，退出时恢复原 context；
+`get_run_context()` 返回当前 context 或 `None`。存储保留整次运行，长期监控应每轮创建新 context 并持久化结果。
+契约保存 runner 的判断，不自行决定状态码是否成功。
 
 ## 包闸门
 
