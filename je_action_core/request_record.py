@@ -62,15 +62,28 @@ _CHOICES = {
 }
 _PAYLOAD_FIELDS = ("text", "headers", "content_base64", "request_body")
 _REQUIRED = tuple(RequestRecord.__annotations__)
+_MAX_JSON_INTEGER = 10**4300  # Portable default integer conversion limit in supported Python versions.
 
 
 def _fail(location: str, reason: str) -> None:
     raise RequestRecordError(f"{location}: {reason}")
 
 
+def _json_integer(value: int, location: str) -> int:
+    if abs(value) >= _MAX_JSON_INTEGER:
+        _fail(location, "integer exceeds the portable JSON conversion limit")
+    try:
+        str(value)
+    except ValueError as error:
+        raise RequestRecordError(f"{location}: integer exceeds the JSON conversion limit") from error
+    return value
+
+
 def _json_value(value: object, location: str, ancestors: frozenset[int] = frozenset()) -> object:
-    if value is None or isinstance(value, (str, bool, int)):
+    if value is None or isinstance(value, (str, bool)):
         return value
+    if isinstance(value, int):
+        return _json_integer(value, location)
     if isinstance(value, float):
         if not math.isfinite(value):
             _fail(location, "must be finite")
@@ -100,16 +113,35 @@ def _json_container(value: object, location: str, ancestors: frozenset[int]) -> 
     _fail(location, f"unsupported value type {type(value).__name__}")
 
 
-def _validate_text(record: Mapping[str, object]) -> None:
-    for field in _TEXT_FIELDS:
+def _validate_strings(record: Mapping[str, object], fields: tuple[str, ...]) -> None:
+    for field in fields:
         if not isinstance(record[field], str) or not record[field]:
             _fail(field, "must be a non-empty string")
-    for field in _OPTIONAL_IDS:
+
+
+def _validate_ids(record: Mapping[str, object], fields: tuple[str, ...]) -> None:
+    for field in fields:
         if record[field] is not None and not isinstance(record[field], str):
             _fail(field, "must be a string or null")
-    for field, choices in _CHOICES.items():
+
+
+def _validate_choices(record: Mapping[str, object], fields: tuple[str, ...]) -> None:
+    for field in fields:
+        choices = _CHOICES[field]
         if record[field] not in choices:
             _fail(field, f"must be one of {choices}")
+
+
+def _validate_run_identity(identity: Mapping[str, object]) -> None:
+    _validate_strings(identity, ("run_id", "source", "phase", "engine"))
+    _validate_ids(identity, ("worker_id",))
+    _validate_choices(identity, ("source", "phase"))
+
+
+def _validate_text(record: Mapping[str, object]) -> None:
+    _validate_strings(record, _TEXT_FIELDS)
+    _validate_ids(record, _OPTIONAL_IDS)
+    _validate_choices(record, tuple(_CHOICES))
     method = cast(str, record["request_method"])
     if record["protocol"] == "http" and method != method.upper():
         _fail("request_method", "HTTP methods must be uppercase")
@@ -125,10 +157,19 @@ def _validate_integer(record: Mapping[str, object], field: str, minimum: int | N
         _fail(field, f"must be at least {minimum}")
 
 
+def _is_finite_number(value: object) -> bool:
+    if type(value) not in (int, float):
+        return False
+    try:
+        return math.isfinite(cast(float, value))
+    except OverflowError:
+        return False
+
+
 def _validate_measurements(record: Mapping[str, object]) -> None:
     for field in _MEASUREMENTS:
         value = record[field]
-        if value is not None and (type(value) not in (int, float) or not math.isfinite(cast(float, value))):
+        if value is not None and not _is_finite_number(value):
             _fail(field, "must be a finite number or null")
     elapsed = record["response_time_ms"]
     if elapsed is not None and cast(float, elapsed) < 0:
@@ -166,6 +207,8 @@ def _validate_assertions(record: Mapping[str, object]) -> None:
             _fail(location, "must have a string type")
         if type(assertion.get("passed")) is not bool:
             _fail(location, "passed must be a boolean")
+        if "message" in assertion and not isinstance(assertion["message"], str):
+            _fail(location, "message must be a string")
         if not assertion["passed"] and not isinstance(assertion.get("message"), str):
             _fail(location, "failed assertion must have a message")
         if not assertion["passed"] and record["outcome"] == "passed":
@@ -221,7 +264,9 @@ def request_record_schema() -> dict[str, object]:
         "assertions": {"type": "array", "items": {"type": "object", "required": ["type", "passed"],
                                                  "properties": {"type": {"type": "string"},
                                                                 "passed": {"type": "boolean"},
-                                                                "message": {"type": "string"}}}},
+                                                                "message": {"type": "string"}},
+                                                 "allOf": [{"if": {"properties": {"passed": {"const": False}}},
+                                                            "then": {"required": ["message"]}}]}},
         "extensions": {"type": "object"},
         "text": {"type": ["string", "null"]}, "headers": {"type": "object"},
         "content_base64": {"type": "string"}, "request_body": {},
@@ -230,5 +275,7 @@ def request_record_schema() -> dict[str, object]:
             "type": "object", "required": list(_REQUIRED), "properties": properties,
             "additionalProperties": False,
             "allOf": [{"if": {"properties": {"outcome": {"const": "passed"}}},
-                       "then": {"properties": {"error": {"type": "null"}}},
+                       "then": {"properties": {"error": {"type": "null"},
+                                                "assertions": {"items": {"properties": {
+                                                    "passed": {"const": True}}}}}},
                        "else": {"properties": {"error": {"type": "object"}}}}]}

@@ -83,6 +83,8 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 
 ## Request results
 
+Run identities are validated when the context is constructed. Retries compare JSON content with object keys sorted, distinguishing booleans from numbers. Assertion messages must be strings when present, and failed assertions require a message. Integer values beyond the portable JSON conversion limit and unrepresentable measurement values raise field-located contract errors.
+
 Request results are separate from executor action records. `RequestRecord` v1 gives functional,
 load and synthetic runs the same method/URL, numeric status, nullable measurements, structured error,
 assertions and run/worker/step identities. `validate_request_record` returns a detached JSON-safe result;

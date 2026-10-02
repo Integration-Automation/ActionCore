@@ -79,6 +79,10 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 
 ## Request 結果
 
+Run identity 在 context 建立時即驗證。重送以排序物件鍵後的 JSON 內容比較，區分布林值與數字。
+斷言訊息存在時必須是字串，失敗斷言必須帶訊息。超過可攜式 JSON 轉換限制的整數及無法表示的測量值
+會產生包含欄位位置的契約錯誤。
+
 Request 結果與 executor 的 action 紀錄分開。`RequestRecord` v1 讓功能、負載與合成監控使用
 相同的方法／URL、數字狀態碼、可為 null 的量測值、結構化錯誤、assertion 與 run／worker／step 識別。
 `validate_request_record` 回傳隔離且可序列化的結果；`serialize_request_record` 輸出 JSON，

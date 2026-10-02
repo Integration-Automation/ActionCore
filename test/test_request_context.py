@@ -77,3 +77,25 @@ def test_async_task_contexts_do_not_cross_contaminate():
 def test_capture_rejects_wrong_source_instead_of_overriding_identity():
     with pytest.raises(RequestRecordError, match="source"):
         context().capture(fields(source="apitestka"))
+
+
+@pytest.mark.parametrize("value,retry", [(1, True), ([{"flag": 1}], [{"flag": True}])])
+def test_boolean_and_numeric_retry_payloads_conflict(value, retry):
+    run = context()
+    record = run.capture(fields(extensions={"value": value}))
+    with pytest.raises(RequestRecordError, match="record_id"):
+        run.append({**record, "extensions": {"value": retry}})
+
+
+@pytest.mark.parametrize("field,value", [("source", "invalid"), ("phase", "invalid"), ("engine", ""),
+                                          ("worker_id", 1), ("run_id", ""), ("run_id", 1)])
+def test_invalid_identity_fails_at_construction(field, value):
+    settings = {"source": "loaddensity", "phase": "load", "engine": "asyncio", field: value}
+    with pytest.raises(RequestRecordError, match=field):
+        RunContext(**settings)
+
+
+def test_retry_with_different_object_key_order_is_identical():
+    run = context()
+    record = run.capture(fields(extensions={"first": 1, "second": 2}))
+    assert run.append({**record, "extensions": {"second": 2, "first": 1}}) is False

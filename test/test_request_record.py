@@ -123,3 +123,30 @@ def test_circular_payload_is_rejected_with_location():
     extensions["cycle"] = extensions
     with pytest.raises(RequestRecordError, match="extensions.cycle"):
         serialize_request_record(sample(extensions=extensions))
+
+
+def test_passed_assertion_message_must_be_text_when_present():
+    with pytest.raises(RequestRecordError, match="assertions"):
+        validate_request_record(sample(assertions=[{"type": "status", "passed": True, "message": 1}]))
+
+
+@pytest.mark.parametrize("field,value", [("start_time", 10**1000), ("response_length", 10**5000)],
+                         ids=["huge-timestamp", "huge-length"])
+def test_extreme_integer_errors_keep_the_field_location(field, value):
+    with pytest.raises(RequestRecordError, match=field):
+        serialize_request_record(sample(**{field: value}))
+
+
+@pytest.mark.parametrize("assertion,outcome", [
+    ({"type": "status", "passed": False}, "failed"),
+    ({"type": "status", "passed": True, "message": 1}, "passed"),
+    ({"type": "status", "passed": False, "message": "bad"}, "passed"),
+])
+def test_schema_and_validator_reject_the_same_assertion_errors(assertion, outcome):
+    jsonschema = pytest.importorskip("jsonschema")
+    record = sample(assertions=[assertion], outcome=outcome,
+                    error={"kind": "assertion", "message": "bad"} if outcome == "failed" else None)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.Draft202012Validator(request_record_schema()).validate(record)
+    with pytest.raises(RequestRecordError):
+        validate_request_record(record)

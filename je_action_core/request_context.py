@@ -10,7 +10,12 @@ from contextvars import ContextVar
 from threading import RLock
 from uuid import uuid4
 
-from je_action_core.request_record import RequestRecord, RequestRecordError, validate_request_record
+from je_action_core.request_record import (
+    RequestRecord,
+    RequestRecordError,
+    _validate_run_identity,
+    validate_request_record,
+)
 
 
 class RunContext:
@@ -18,9 +23,10 @@ class RunContext:
 
     def __init__(self, source: str, phase: str, engine: str, worker_id: str | None = None,
                  run_id: str | None = None) -> None:
-        self.run_id = run_id or str(uuid4())
+        self.run_id = str(uuid4()) if run_id is None else run_id
         self._identity = {"run_id": self.run_id, "source": source, "phase": phase,
                           "engine": engine, "worker_id": worker_id}
+        _validate_run_identity(self._identity)
         self._records: dict[str, RequestRecord] = {}
         self._lock = RLock()
 
@@ -42,7 +48,7 @@ class RunContext:
         with self._lock:
             previous = self._records.get(identifier)
             if previous is not None:
-                if previous != validated:
+                if json.dumps(previous, sort_keys=True) != json.dumps(validated, sort_keys=True):
                     raise RequestRecordError("record_id: conflicting retry of an existing record")
                 return False
             self._records[identifier] = validated

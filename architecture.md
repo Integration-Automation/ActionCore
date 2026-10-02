@@ -86,6 +86,8 @@ Nothing in the package imports a project; the projects import it.
 
 ## 6. Cross-project boundaries
 
+RunContext rejects invalid identities during construction and compares sorted JSON for retries; booleans and numbers are distinct. Assertion schema constraints match the Python validator. Measurements must be representable as finite numbers; integers must fit the portable JSON conversion limit.
+
 `request_record.py` owns the separate RequestRecord v1 contract (TypedDict, validator, JSON serializer
 and JSON Schema); `request_context.py` owns explicit `RunContext` storage and ContextVar scopes.
 They use only the standard library and do not alter executor action records. Framework adapters remain
