@@ -150,3 +150,13 @@ def test_schema_and_validator_reject_the_same_assertion_errors(assertion, outcom
         jsonschema.Draft202012Validator(request_record_schema()).validate(record)
     with pytest.raises(RequestRecordError):
         validate_request_record(record)
+
+
+@pytest.mark.parametrize("method", ["get", "BAD METHOD", "GÉT"])
+def test_http_methods_use_the_same_uppercase_token_rule_in_schema(method):
+    jsonschema = pytest.importorskip("jsonschema")
+    record = sample(request_method=method)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.Draft202012Validator(request_record_schema()).validate(record)
+    with pytest.raises(RequestRecordError, match="request_method"):
+        validate_request_record(record)

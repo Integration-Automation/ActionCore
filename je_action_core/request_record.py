@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import math
+import re
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import TypedDict, cast
@@ -63,6 +64,7 @@ _CHOICES = {
 _PAYLOAD_FIELDS = ("text", "headers", "content_base64", "request_body")
 _REQUIRED = tuple(RequestRecord.__annotations__)
 _MAX_JSON_INTEGER = 10**4300  # Portable default integer conversion limit in supported Python versions.
+_HTTP_METHOD_PATTERN = r"^[A-Z!#$%&'*+.^_`|~0-9-]+$"
 
 
 def _fail(location: str, reason: str) -> None:
@@ -143,8 +145,8 @@ def _validate_text(record: Mapping[str, object]) -> None:
     _validate_ids(record, _OPTIONAL_IDS)
     _validate_choices(record, tuple(_CHOICES))
     method = cast(str, record["request_method"])
-    if record["protocol"] == "http" and method != method.upper():
-        _fail("request_method", "HTTP methods must be uppercase")
+    if record["protocol"] == "http" and re.fullmatch(_HTTP_METHOD_PATTERN, method) is None:
+        _fail("request_method", "HTTP methods must be uppercase ASCII tokens")
 
 
 def _validate_integer(record: Mapping[str, object], field: str, minimum: int | None = None) -> None:
@@ -278,4 +280,6 @@ def request_record_schema() -> dict[str, object]:
                        "then": {"properties": {"error": {"type": "null"},
                                                 "assertions": {"items": {"properties": {
                                                     "passed": {"const": True}}}}}},
-                       "else": {"properties": {"error": {"type": "object"}}}}]}
+                       "else": {"properties": {"error": {"type": "object"}}}},
+                      {"if": {"properties": {"protocol": {"const": "http"}}},
+                       "then": {"properties": {"request_method": {"pattern": _HTTP_METHOD_PATTERN}}}}]}

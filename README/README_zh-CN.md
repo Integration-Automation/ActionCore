@@ -79,6 +79,8 @@ executor.execute_action({"my_tool": [["MY_add", [1, 2]], ["MY_add", {"a": 3, "b"
 
 ## Request 结果
 
+HTTP `request_method`: uppercase ASCII token; schema and Python validation enforce the same rule.
+
 Run identity 在 context 创建时即验证。重送以排序对象键后的 JSON 内容比较，区分布尔值与数字。
 断言信息存在时必须是字符串，失败断言必须带信息。超过可移植 JSON 转换限制的整数及无法表示的测量值
 会产生包含字段位置的契约错误。
