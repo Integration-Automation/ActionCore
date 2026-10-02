@@ -64,7 +64,7 @@ _CHOICES = {
 _PAYLOAD_FIELDS = ("text", "headers", "content_base64", "request_body")
 _REQUIRED = tuple(RequestRecord.__annotations__)
 _MAX_JSON_INTEGER = 10**4300  # Portable default integer conversion limit in supported Python versions.
-_HTTP_METHOD_PATTERN = r"^[A-Z!#$%&'*+.^_`|~0-9-]+$"
+_HTTP_METHOD_PATTERN = r"^[A-Z!#$%&'*+.^_`|~0-9-]+$(?![\s\S])"
 
 
 def _fail(location: str, reason: str) -> None:

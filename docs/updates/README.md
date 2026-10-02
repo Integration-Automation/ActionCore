@@ -58,6 +58,7 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261002-04 | 2026-10-02 | Reject trailing newlines in HTTP method schema | #done #records | [2026-10](2026-10.md) |
 | U-20261002-03 | 2026-10-02 | Align HTTP method schema validation | #done #records | [2026-10](2026-10.md) |
 | U-20261002-02 | 2026-10-02 | Validate run identities and JSON retry semantics | #done #records | [2026-10](2026-10.md) |
 | U-20261002-01 | 2026-10-02 | Add versioned request records and isolated run contexts | #done #records | [2026-10](2026-10.md) |

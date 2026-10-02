@@ -152,7 +152,7 @@ def test_schema_and_validator_reject_the_same_assertion_errors(assertion, outcom
         validate_request_record(record)
 
 
-@pytest.mark.parametrize("method", ["get", "BAD METHOD", "GÉT"])
+@pytest.mark.parametrize("method", ["get", "BAD METHOD", "GÉT", "GET\n"])
 def test_http_methods_use_the_same_uppercase_token_rule_in_schema(method):
     jsonschema = pytest.importorskip("jsonschema")
     record = sample(request_method=method)
