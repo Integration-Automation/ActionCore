@@ -58,6 +58,14 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261002-04 | 2026-10-02 | Reject trailing newlines in HTTP method schema | #done #records | [2026-10](2026-10.md) |
+| U-20261002-03 | 2026-10-02 | Align HTTP method schema validation | #done #records | [2026-10](2026-10.md) |
+| U-20261002-02 | 2026-10-02 | Validate run identities and JSON retry semantics | #done #records | [2026-10](2026-10.md) |
+| U-20261002-01 | 2026-10-02 | Add versioned request records and isolated run contexts | #done #records | [2026-10](2026-10.md) |
+| U-20261001-12 | 2026-10-01 | The publish job builds with the locked setuptools instead of downloading the newest | #change #ci #security #X-13 | [2026-10](2026-10.md) |
+| U-20261001-11 | 2026-10-01 | Publish job installs hash-locked build tooling | #done #ci #security #X-13 | [2026-10](2026-10.md) |
+| U-20261001-10 | 2026-10-01 | The sdist carries no tests | #done #packaging #X-13 | [2026-10](2026-10.md) |
+| U-20261001-09 | 2026-10-01 | WebRunner's executor runs on the core | #done #executor #webrunner | [2026-10](2026-10.md) |
 | U-20261001-08 | 2026-10-01 | Executor hooks for WebRunner: attempt, failure records, numbered keys, collect | #executor #webrunner | [2026-10](2026-10.md) |
 | U-20261001-07 | 2026-10-01 | LoadDensity's and FileAutomation's servers run on the core | #done #socket-server | [2026-10](2026-10.md) |
 | U-20261001-06 | 2026-10-01 | Socket server: template handler, framing, TLS, two auth dialects | #change #socket-server | [2026-10](2026-10.md) |
@@ -71,4 +79,4 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | File | Period | Entries |
 |---|---|---:|
-| [2026-10.md](2026-10.md) | 2026-10 | 8 |
+| [2026-10.md](2026-10.md) | 2026-10 | 12 |

@@ -26,7 +26,8 @@ settings: command prefix, document key, exceptions, messages and reporting. The 
 | `je_action_core/socket_server.py` | `ActionTCPServer` (`close_flag`, `close_event`, `request_stop`), the template `ActionRequestHandler`, `SocketServerSettings` (framing, TLS, `ReplyMessages`, secret), `server_tls_context`, `start_action_socket_server` |
 | `je_action_core/socket_auth.py` | `SecretHeaderRequestHandler` (`<prefix><secret>` first line) and `EnvelopeTokenRequestHandler` (JSON envelope token) |
 | `je_action_core/builtins_policy.py` | `SAFE_BUILTINS`, `safe_builtin_commands()` |
-| `test/` | One test module per piece, plus the workflow pinning checks |
+| `test/` | One test module per piece, plus the workflow checks (pinned actions, Dependabot, the publish job's hash-locked tools and build backend) and the sdist manifest check (`MANIFEST.in` keeps `test/` out of the sdist) |
+| `.github/requirements/` | The hash-locked tool sets the workflows install, each generated from the `.in` beside it: `ci.txt` (the test job) and `publish.txt` (`build`, `twine` and the build backend `setuptools`, the only install of the job that holds the PyPI token; it runs `python -m build --no-isolation`, so the build uses that locked backend instead of downloading the newest) |
 
 Nothing in the package imports a project; the projects import it.
 
@@ -85,15 +86,25 @@ Nothing in the package imports a project; the projects import it.
 
 ## 6. Cross-project boundaries
 
+RunContext rejects invalid identities during construction and compares sorted JSON for retries; booleans and numbers are distinct. Assertion schema constraints and uppercase ASCII HTTP method tokens match the Python validator. Measurements must be representable as finite numbers; integers must fit the portable JSON conversion limit.
+
+`request_record.py` owns the separate RequestRecord v1 contract (TypedDict, validator, JSON serializer
+and JSON Schema); `request_context.py` owns explicit `RunContext` storage and ContextVar scopes.
+They use only the standard library and do not alter executor action records. Framework adapters remain
+in the consumers. Contexts retain complete runs; consumers must rotate/persist long-lived monitoring runs.
+New consumers are developed against isolated checkouts until the core release exposes these APIs;
+their existing package imports must remain usable with the previously published dependency floor.
+
 **Used by.** Each project that moves adds a row here; the same round updates that project's own
-`architecture.md` §6. The projects install it from PyPI (`je_action_core>=0.0.1`); a change they need is released
-first and their minimum version raised in the same round.
+`architecture.md` §6. The projects install it from PyPI (`je_action_core>=0.0.1` to `>=0.0.3`, each the release that
+has what it uses); a change they need is released first and their minimum version raised in the same round.
 
 | Project | Pieces | Settings |
 |---|---|---|
 | APITestka (`AT_`, `api_testka`) | executor, registry, package manager, callback executor, JSON files, file listing, socket server (9939) | `LegacyActionParser`, plain record keys, `LoggingReporter`, `strip_runner_metadata` as `prepare`; functions-only registry; gate on, prefixed members, every load error logged; callback returns `None` on failure; socket reads the prefix and answers every error |
 | MailThunder (`MT_`, `mail_thunder`, legacy `auto_control`) | executor, registry, package manager, JSON files, file listing, socket server (9942) | `LegacyActionParser`, `EmptyListPolicy.RETURN_EMPTY`, plain record keys, `LoggingReporter` with its empty message, `SAFE_BUILTINS`; functions-only registry; gate on, identifier-path names, import and attribute errors logged; `from_document` in its payload check; socket rejects oversized payloads and answers `ValueError`, `OSError`, `TypeError` |
 | LoadDensity (`LD_`, `load_density`) | executor, registry, package manager, callback executor, JSON files, socket server (9940) | `LegacyActionParser`, plain record keys, `PrintReporter`, `SAFE_BUILTINS`; functions-only registry; gate on, bare member names, functions only, ASCII names, errors printed; callback raises after printing; JSON wraps every error; `EnvelopeTokenRequestHandler`, raw or `LENGTH_PREFIX` framing, optional TLS, `Error: <text>` replies, size-only log line, run under gevent. Its file listing stays in LoadDensity |
+| WebRunner (`WR_`, `webdriver_wrapper`) | executor, registry | its own `[name, [args], {kwargs}]` parser and list rules (`action_list_of`: an empty list runs nothing, its error logged); functions-only registry; `PrintReporter` with `on_start` / `on_failure` logged; `failure_record` = the error text plus failure screenshot and trace; `DuplicateKeys.NUMBER`; refused commands and the script gate in `_execute_event`, retries and the action span in `attempt`; `collect_action_results` for MCP and the async executor. Its package manager, callback executor, JSON files and socket server stay in WebRunner (`progress.md` #4) |
 | FileAutomation (`FA_`, `auto_control`) | registry, executor pipeline, package loader, callback executor, JSON files, TCP server (9943) | any-callable registry (`"<name> is not callable"`); `StrictActionParser`, `indexed_record_key`, its three list messages; tracing through `invoke`; `check_and_add` for the member count, gate off, `ImportError` logged; strict callback, errors raised; JSON wraps `JSONDecodeError` / `OSError` on read and `OSError` / `TypeError` on write; `SecretHeaderRequestHandler` (`AUTH <secret>`), the ACL as `validate`, `<key> -> <value>` records and prefixed error replies. Dry run, validate, substitute, parallel runs, metrics and its HTTP server stay in FileAutomation |
 
 **What the projects rely on here.** They rely on these, and none may change without changing the projects in
@@ -101,8 +112,10 @@ the same round:
 
 - the names in `__all__`, and the settings fields they pass;
 - `event_dict` staying the live mapping of a registry, executor and callback executor;
-- the record formats `"execute: <action>"` and `"execute[<index>]: <action>"`, and `repr(error)` as a failed
-  action's record;
+- the record formats `"execute: <action>"` and `"execute[<index>]: <action>"`, `repr(error)` as a failed
+  action's default record, and `" #2"`, `" #3"` … for numbered repeats;
+- `attempt` and `_execute_event` as the override points WebRunner uses, and the order `on_start`, then
+  `rules.extract`, then per action `attempt` with `on_failure` before `failure_record`;
 - the error texts of `LegacyActionParser` (`f"{message} {action}"`) and of `StrictActionParser` (FileAutomation's
   messages);
 - the socket protocol: `Return_Data_Over_JE`, `quit_server`, one line per value.
