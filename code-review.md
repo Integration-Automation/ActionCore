@@ -92,7 +92,7 @@
 - 命令表的 `FUNCTIONS_ONLY` 只約束 `add_commands`。專案要函式限定時自己傳入這個政策；直接寫 `event_dict` 是 §6 寫明的活字典，不是這次要列的繞過。
 - `start_action_socket_server` 的 host 是必填參數，沒有預設 `0.0.0.0`。基礎處理器沒有驗證，文件要求綁在可信任介面。有祕密時，標頭方言先核對再交給基礎處理器記錄；信封方言拒絕沒有相符 token 的文件與 `quit_server`。比對使用 `hmac.compare_digest`，非字串視為不符。`server_tls_context` 用標準程式庫的預設伺服器情境，並把下限設為 TLS 1.2。測試有覆蓋這些分支。
 - 預設日誌鉤子丟棄訊息。記錄範本可以改成只記長度，`test_log_command_template_can_hide_the_text` 守住這一點。信封方言的全文範本只有在宿主換上會保存訊息的 `log_info` 且沒改範本時才會帶出 token；§6 寫 LoadDensity 用的是只記大小的那一行。不另列。
-- CI 在 Linux、macOS、Windows 上跑 Python 3.10 到 3.14，測試依賴以雜湊鎖定。`test/` 有對應各模組的測試，另有 workflow 與 sdist manifest 測試。這次沒有執行。
+- CI 在 Linux、macOS、Windows 上跑 Python 3.11 到 3.14，測試依賴以雜湊鎖定。`test/` 有對應各模組的測試，另有 workflow 與 sdist manifest 測試。這次沒有執行。
 
 ### 未涵蓋
 
