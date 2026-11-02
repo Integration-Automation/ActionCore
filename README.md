@@ -9,7 +9,7 @@ Each of them carried its own copy of the same executor, package manager, callbac
 and socket server. This package replaces those copies: a project configures it with its own command prefix,
 document key, exceptions and messages.
 
-It has no dependencies and supports Python 3.10 to 3.14.
+It has no dependencies and supports Python 3.11 to 3.14.
 
 ## Contents
 

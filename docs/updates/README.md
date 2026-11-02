@@ -58,6 +58,7 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | ID | Date | Title | Tags | Batch |
 |---|---|---|---|---|
+| U-20261102-01 | 2026-11-02 | Require Python 3.11; stop supporting 3.10 | #migration #deps #ci | [2026-11](2026-11.md) |
 | U-20261002-04 | 2026-10-02 | Reject trailing newlines in HTTP method schema | #done #records | [2026-10](2026-10.md) |
 | U-20261002-03 | 2026-10-02 | Align HTTP method schema validation | #done #records | [2026-10](2026-10.md) |
 | U-20261002-02 | 2026-10-02 | Validate run identities and JSON retry semantics | #done #records | [2026-10](2026-10.md) |
@@ -79,4 +80,5 @@ In the same commit: delete the item from `progress.md`, add a `#done` entry here
 
 | File | Period | Entries |
 |---|---|---:|
+| [2026-11.md](2026-11.md) | 2026-11 | 1 |
 | [2026-10.md](2026-10.md) | 2026-10 | 12 |
