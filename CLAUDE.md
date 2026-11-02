@@ -6,7 +6,7 @@ ActionCore (`je_action_core`) is the keyword-driven action executor shared by AP
 and FileAutomation: executor, command registry, package manager with the package gate, callback executor,
 action-file reading and writing, action-file discovery, and the plain TCP action server.
 
-- **Python**: 3.10+
+- **Python**: 3.11+
 - **Dependencies**: none (the standard library only). Keep it that way: every project that uses this package
   installs it.
 
@@ -64,7 +64,7 @@ Codacy without warnings:
 - Every new feature, fix or refactor ships with tests in the same commit, under `test/test_<piece>.py`.
 - A bug fix starts with a test that fails before the fix.
 - A setting needs a test for each of its values.
-- Run `pytest -x` before committing; CI runs Python 3.10–3.14 on Linux, macOS and Windows.
+- Run `pytest -x` before committing; CI runs Python 3.11–3.14 on Linux, macOS and Windows.
 
 ## Documentation
 

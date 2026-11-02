@@ -9,7 +9,7 @@ Each of them carried its own copy of the same executor, package manager, callbac
 and socket server. This package replaces those copies: a project configures it with its own command prefix,
 document key, exceptions and messages.
 
-It has no dependencies and supports Python 3.10 to 3.14.
+It has no dependencies and supports Python 3.11 to 3.14.
 
 ## Contents
 
@@ -21,6 +21,7 @@ It has no dependencies and supports Python 3.10 to 3.14.
 - [Socket server protocol](#socket-server-protocol)
 - [Who uses it](#who-uses-it)
 - [Development](#development)
+- [Security](#security)
 - [License](#license)
 
 ## Installation
@@ -159,6 +160,10 @@ python -m pytest test/
 
 `architecture.md` describes the layers and the contracts with the four projects. Outstanding work is in
 `progress.md`, and finished work is recorded in `docs/updates/`.
+
+## Security
+
+Report vulnerabilities privately. The policy, supported versions, and operator notes are in [SECURITY.md](SECURITY.md).
 
 ## License
 

@@ -124,7 +124,7 @@ the same round:
 
 ## 7. Design constraints
 
-- No runtime dependencies. Python 3.10 and later. Every settings object is a frozen dataclass; mutable state
+- No runtime dependencies. Python 3.11 and later. Every settings object is a frozen dataclass; mutable state
   lives on instances (registries, caches, the gate).
 - Behaviour that differs between projects is a setting, never a project-name check. A refactor in a project
   that moves onto this package must not change that project's behaviour; where a project behaved differently

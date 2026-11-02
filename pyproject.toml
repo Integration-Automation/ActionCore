@@ -10,12 +10,11 @@ authors = [
 ]
 description = "The keyword-driven action executor shared by APITestka, LoadDensity, MailThunder and FileAutomation"
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = []
 classifiers = [
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
